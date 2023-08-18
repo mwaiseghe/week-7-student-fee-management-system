@@ -1,10 +1,12 @@
 const mssql = require('mssql');
+const { v4 } = require('uuid');
+
 const { createStudent, updateStudent, softDeleteStudent, getStudents, getStudentById } = require('../Controllers/studentController');
 
 const req = {
     body: {
         name: 'Gift Mwaiseghe',
-        class_in_in: 'COM 19',
+        class_in: 'COM 19',
         fee_balance: 10000
     }
 }
@@ -198,6 +200,15 @@ describe('Student Controller', () => {
 
         // check if student is created
         it('should return a success message if student is created', async () => {
+            // mocking mssql module
+            jest.spyOn(mssql, 'connect').mockResolvedValueOnce({
+                request: jest.fn().mockReturnThis(),
+                input: jest.fn().mockReturnThis(),
+                execute: jest.fn().mockResolvedValueOnce({
+                    recordset: []
+                })
+            });
+
             // act
             const req = {
                 body: {
@@ -206,14 +217,6 @@ describe('Student Controller', () => {
                     fee_balance: 10000
                 }
             }
-
-            jest.spyOn(mssql, 'connect').mockResolvedValueOnce({
-                request: jest.fn().mockReturnThis(),
-                input: jest.fn().mockReturnThis(),
-                execute: jest.fn().mockResolvedValueOnce({
-                    rowsAffected: [1]
-                })
-            });
 
             await createStudent(req, res);
 
@@ -222,11 +225,16 @@ describe('Student Controller', () => {
             expect(res.json).toHaveBeenCalledWith({
                 message: 'Student created successfully'
             });
-
         });
 
-        // check if student is not created
         it('should return an error message if student is not created', async () => {
+            // mocking mssql module
+            jest.spyOn(mssql, 'connect').mockResolvedValueOnce({
+                request: jest.fn().mockReturnThis(),
+                input: jest.fn().mockReturnThis(),
+                execute: jest.fn().mockRejectedValueOnce(new Error('Student not created'))
+            });
+
             // act
             const req = {
                 body: {
@@ -236,12 +244,6 @@ describe('Student Controller', () => {
                 }
             }
 
-            jest.spyOn(mssql, 'connect').mockResolvedValueOnce({
-                request: jest.fn().mockReturnThis(),
-                input: jest.fn().mockReturnThis(),
-                execute: jest.fn().mockRejectedValueOnce(new Error('Student not created'))
-            });
-
             await createStudent(req, res);
 
             // assert
@@ -249,94 +251,179 @@ describe('Student Controller', () => {
             expect(res.json).toHaveBeenCalledWith({
                 message: 'Student not created'
             });
-
         });
 
-    it('should return a success message if student is updated', async () => {
-        // act
-        const req = {
-            params: {
-                id: "6a390e91-0d8e-4ea3-b47d-68436d31027a",
-            },
-            body: {
-                name: 'Gift Mwaiseghe',
-                class_in: 'COM 19',
-                fee_balance: 10000
+    describe('Update Student', () => {
+        // check if student exists
+        it('should return an error if student does not exist', async () => {
+            const req = {
+                params: {
+                    id: "dgjhdjsb",
+                },
+                body: {
+                    name: 'Gift Mwaiseghe',
+                    class_in: 'COM 19',
+                    fee_balance: 10000
+                }
             }
-        }
 
-        jest.spyOn(mssql, 'connect').mockResolvedValueOnce({
-            request: jest.fn().mockReturnThis(),
-            input: jest.fn().mockReturnThis(),
-            execute: jest.fn().mockResolvedValueOnce({
-                rowsAffected: [1]
-            })
+            // act
+            jest.spyOn(mssql, 'connect').mockResolvedValueOnce({
+                request: jest.fn().mockReturnThis(),
+                input: jest.fn().mockReturnThis(),
+                execute: jest.fn().mockResolvedValueOnce({
+                    recordset: []
+                })
+            });
+
+            await updateStudent(req, res);
+
+            // assert
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                message: 'Student does not exist'
+            });
         });
 
-        await updateStudent(req, res);
+        // check if student is updated
+        it('should return a success message if student is updated', async () => {
+            const req = {
+                params: {
+                    id: "6a390e91-0d8e-4ea3-b47d-68436d31027a",
+                },
+                body: {
+                    name: 'Gift Mwaiseghe',
+                    class_in: 'COM 19',
+                    fee_balance: 10000
+                }
+            }
 
-        // assert
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith({
-            message: 'Student updated successfully'
+            const student = {
+                "id": "6a390e91-0d8e-4ea3-b47d-68436d31027a",
+                "name": "Gift Watatu",
+                "class": "Com 19",
+                "fee_balance": 1000,
+                "is_active": true,
+                "created_at": "2023-08-18T11:13:00.260Z",
+                "updated_at": "2023-08-18T11:13:00.260Z"
+            };
+
+            // act
+            jest.spyOn(mssql, 'connect').mockResolvedValueOnce({
+                request: jest.fn().mockReturnThis(),
+                input: jest.fn().mockReturnThis(),
+                execute: jest.fn().mockResolvedValueOnce({
+                    recordset: [student]
+                })
+            });
+
+            await updateStudent(req, res);
+
+            // assert
+            expect(res.status).toHaveBeenCalledWith(200);
+            expect(res.json).toHaveBeenCalledWith({
+                message: 'Student updated successfully'
+            });
+
+        });
+
+        it('should return an error message if student is not updated', async () => {
+            // mocking mssql module
+            jest.spyOn(mssql, 'connect').
+                mockResolvedValueOnce({
+                    request: jest.fn().mockReturnThis(),
+                    input: jest.fn().mockReturnThis(),
+                    execute: jest.fn().mockRejectedValueOnce(new Error('Student not updated'))
+                });
+
+            // act
+            const req = {
+                params: {
+                    id: "6a390e91-0d8e-4ea3-b47d-68436d31027a",
+                },
+                body: {
+                    name: 'Gift Mwaiseghe',
+                    class_in: 'COM 19',
+                    fee_balance: 10000
+                }
+            }
+
+            await updateStudent(req, res);
+
+            // assert
+            expect(res.status).toHaveBeenCalledWith(500);
+            expect(res.json).toHaveBeenCalledWith({
+                message: 'Student not updated'
+            });
         });
 
     });
 
-    it('should return an error message if student is not updated', async () => {
-        // act
-        const req = {
-            params: {
-                id: "6a390e91-0d8e-4ea3-b47d-68436d31027a",
-            },
-            body: {
-                name: 'Gift Mwaiseghe',
-                class_in: 'COM 19',
-                fee_balance: 10000
+
+    describe('Soft Delete Student', () => {
+        // check if student exists
+        it('should return an error if student does not exist', async () => {
+            const req = {
+                params: {
+                    id: "dgjhdjsb",
+                }
             }
-        }
 
-        jest.spyOn(mssql, 'connect').mockResolvedValueOnce({
-            request: jest.fn().mockReturnThis(),
-            input: jest.fn().mockReturnThis(),
-            execute: jest.fn().mockRejectedValueOnce(new Error('Student not updated'))
+            // act
+            jest.spyOn(mssql, 'connect').mockResolvedValueOnce({
+                request: jest.fn().mockReturnThis(),
+                input: jest.fn().mockReturnThis(),
+                execute: jest.fn().mockResolvedValueOnce({
+                    recordset: []
+                })
+            });
+
+            await softDeleteStudent(req, res);
+
+            // assert
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                message: 'Student does not exist'
+            });
         });
 
-        await updateStudent(req, res);
+        // check if student is soft deleted
+        it('should return a success message if student is soft deleted', async () => {
+            const req = {
+                params: {
+                    id: "6a390e91-0d8e-4ea3-b47d-68436d31027a",
+                }
+            }
 
-        // assert
-        expect(res.status).toHaveBeenCalledWith(500);
-        expect(res.json).toHaveBeenCalledWith({
-            message: 'Student not updated'
+            const student = {
+                "id": "6a390e91-0d8e-4ea3-b47d-68436d31027a",
+                "name": "Gift Watatu",
+                "class": "Com 19",
+                "fee_balance": 1000,
+                "is_active": true,
+                "created_at": "2023-08-18T11:13:00.260Z",
+                "updated_at": "2023-08-18T11:13:00.260Z"
+            };
+
+            // act
+            jest.spyOn(mssql, 'connect').mockResolvedValueOnce({
+                request: jest.fn().mockReturnThis(),
+                input: jest.fn().mockReturnThis(),
+                execute: jest.fn().mockResolvedValueOnce({
+                    recordset: [student]
+                })
+            });
+
+            await softDeleteStudent(req, res);
+
+            // assert
+            expect(res.status).toHaveBeenCalledWith(200);
+            expect(res.json).toHaveBeenCalledWith({
+                message: 'Student deleted successfully'
+            });
+
         });
-
+    });
     });
 
-    it('should return a success message if student is soft deleted', async () => {
-        // act
-        const req = {
-            params: {
-                id: "6a390e91-0d8e-4ea3-b47d-68436d31027a",
-            }
-        }
-
-        jest.spyOn(mssql, 'connect').mockResolvedValueOnce({
-            request: jest.fn().mockReturnThis(),
-            input: jest.fn().mockReturnThis(),
-            execute: jest.fn().mockResolvedValueOnce({
-                rowsAffected: [1]
-            })
-        });
-
-        await softDeleteStudent(req, res);
-
-        // assert
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith({
-            message: 'Student deleted successfully'
-        });
-
-    });
-
-});
 });

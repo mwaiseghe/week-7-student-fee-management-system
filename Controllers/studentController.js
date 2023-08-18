@@ -90,14 +90,8 @@ const createStudent = async (req, res) => {
             .input('fee_balance', mssql.Int, fee_balance)
             .execute('create_student');
 
-        if(newStudent.rowsAffected.length > 0){
-            return res.status(201).json({
-                message: "Student created successfully"
-            });
-        }
-
-        return res.status(400).json({
-            message: "Student creation failed"
+        return res.status(201).json({
+            message: "Student created successfully"
         });
 
     } catch (error) {
@@ -130,7 +124,7 @@ const updateStudent = async (req, res) => {
 
         if(student.recordset.length === 0){
             return res.status(400).json({
-                message: "Student doesn't exist"
+                message: "Student does not exist"
             });
         }
 
@@ -142,15 +136,9 @@ const updateStudent = async (req, res) => {
             .input('fee_balance', mssql.Int, fee_balance)
             .execute('update_student');
 
-        if(updatedStudent.rowsAffected.length > 0){
             return res.status(200).json({
                 message: "Student updated successfully"
             });
-        }
-
-        return res.status(400).json({
-            message: "Student updation failed"
-        });
 
     } catch (error) {
         return res.status(500).json({
@@ -172,7 +160,7 @@ const softDeleteStudent = async (req, res) => {
 
         if(student.recordset.length === 0){
             return res.status(400).json({
-                message: "Student doesn't exist"
+                message: "Student does not exist"
             });
         }
 
@@ -181,15 +169,9 @@ const softDeleteStudent = async (req, res) => {
             .input('id', mssql.VarChar, id)
             .execute('delete_student_soft');
 
-        if(deletedStudent.rowsAffected.length > 0){
             return res.status(200).json({
                 message: "Student deleted successfully"
             });
-        }
-
-        return res.status(400).json({
-            message: "Student deletion failed"
-        });
 
     } catch (error) {
         return res.status(500).json({
