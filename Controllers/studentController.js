@@ -91,7 +91,7 @@ const createStudent = async (req, res) => {
             .execute('create_student');
 
         if(newStudent.rowsAffected.length > 0){
-            return res.status(200).json({
+            return res.status(201).json({
                 message: "Student created successfully"
             });
         }
