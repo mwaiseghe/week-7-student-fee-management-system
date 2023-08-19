@@ -2,7 +2,9 @@ const mssql = require('mssql');
 const { v4 } = require('uuid');
 
 const { createStudent, updateStudent, softDeleteStudent, getStudents, getStudentById, makeFeePayment } = require('../Controllers/studentController');
-
+/**
+ * Mocking the request and response objects
+ */
 const req = {
     body: {
         name: 'Gift Mwaiseghe',
@@ -15,6 +17,10 @@ const res = {
     status: jest.fn().mockReturnThis(),
     json: jest.fn()
 }
+
+/**
+ * Student Controller Tests
+ */
 
 describe('Student Controller', () => {
     describe('Fetch All Students', () => {
@@ -252,7 +258,11 @@ describe('Student Controller', () => {
                 message: 'Student not created'
             });
         });
-
+    
+        /**
+         * Update Student Tests: 
+         * Contains all the tests for the updateStudent function
+         */
     describe('Update Student', () => {
         // check if student exists
         it('should return an error if student does not exist', async () => {
@@ -359,7 +369,10 @@ describe('Student Controller', () => {
 
     });
 
-
+    /**
+     * Soft Delete Student Tests:
+     * Contains all the tests for the softDeleteStudent function
+     */
     describe('Soft Delete Student', () => {
         // check if student exists
         it('should return an error if student does not exist', async () => {
@@ -425,6 +438,10 @@ describe('Student Controller', () => {
         });
     });
 
+    /** 
+     * Make Fee Payment Tests:
+     * Contains all the tests for the makeFeePayment function
+    */
     describe('Make Fee Payment', () => {
         // check if student exists
         it('should return an error if student does not exist', async () => {
