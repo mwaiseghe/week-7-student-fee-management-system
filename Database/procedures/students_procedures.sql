@@ -76,21 +76,10 @@ AS
 BEGIN
     INSERT INTO fee_payments (id, student_id, amount)
     VALUES (@id, @student_id, @amount);
+    UPDATE students SET fee_balance = fee_balance - @amount WHERE id = @student_id;
 END;
 GO
 
--- Procedure to Update a student's fee balance
-
-CREATE OR ALTER PROCEDURE update_student_fee_balance
-    @id VARCHAR(255),
-    @amount INT
-AS
-BEGIN
-    UPDATE students
-    SET fee_balance = fee_balance - @amount
-    WHERE id = @id;
-END;
-GO
 
 -- Procedure to get a student's fee balance
 

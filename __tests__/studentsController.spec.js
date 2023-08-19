@@ -1,7 +1,7 @@
 const mssql = require('mssql');
 const { v4 } = require('uuid');
 
-const { createStudent, updateStudent, softDeleteStudent, getStudents, getStudentById } = require('../Controllers/studentController');
+const { createStudent, updateStudent, softDeleteStudent, getStudents, getStudentById, makeFeePayment } = require('../Controllers/studentController');
 
 const req = {
     body: {
@@ -424,6 +424,82 @@ describe('Student Controller', () => {
 
         });
     });
+
+    describe('Make Fee Payment', () => {
+        // check if student exists
+        it('should return an error if student does not exist', async () => {
+            const req = {
+                params: {
+                    id: "dgjhdjsb",
+                },
+                body: {
+                    amount: 10000
+                }
+            }
+
+            // act
+            jest.spyOn(mssql, 'connect').mockResolvedValueOnce({
+                request: jest.fn().mockReturnThis(),
+                input: jest.fn().mockReturnThis(),
+                execute: jest.fn().mockResolvedValueOnce({
+                    recordset: []
+                })
+            });
+
+            await makeFeePayment(req, res);
+
+            // assert
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({
+                message: 'Student does not exist'
+            });
+        });
+
+        // check if student is soft deleted
+        it('should return a success message payment is made', async () => {
+            const req = {
+                params: {
+                    id: "6a390e91-0d8e-4ea3-b47d-68436d31027a",
+                },
+                body: {
+                    amount: 10000
+                }
+            }
+
+            const student = {
+                "id": "6a390e91-0d8e-4ea3-b47d-68436d31027a",
+                "name": "Gift Watatu",
+                "class": "Com 19",
+                "fee_balance": 1000,
+                "is_active": true,
+                "created_at": "2023-08-18T11:13:00.260Z",
+                "updated_at": "2023-08-18T11:13:00.260Z"
+            };
+
+            // act
+            jest.spyOn(mssql, 'connect').mockResolvedValueOnce({
+                request: jest.fn().mockReturnThis(),
+                input: jest.fn().mockReturnThis(),
+                execute: jest.fn().mockResolvedValueOnce({
+                    recordset: [student]
+                })
+            });
+
+            await makeFeePayment(req, res);
+
+            // assert
+            expect(res.status).toHaveBeenCalledWith(200);
+            expect(res.json).toHaveBeenCalledWith({
+                message: 'Fee Payment made successfully'
+            });
+
+        });
+
+
+
     });
 
 });
+
+});
+

@@ -180,10 +180,56 @@ const softDeleteStudent = async (req, res) => {
     }
 }
 
+const makeFeePayment = async (req, res) => {
+    try {
+        const {id} = req.params;
+        const {amount} = req.body;
+
+        // validating if all the fields are entered
+        if(!amount){
+            return res.status(400).json({
+                message: "Please enter amount"
+            });
+        }
+
+        const pool = await mssql.connect(sqlConfig);
+
+        // validating if the student already exists
+        const student = await pool.request()
+            .input('id', mssql.VarChar, id)
+            .execute('get_student_by_id');
+
+        if(student.recordset.length === 0){
+            return res.status(400).json({
+                message: "Student does not exist"
+            });
+        }
+
+        const new_fee_id = v4()
+        
+        // updating a student
+        const updatedStudent = await pool.request()
+            .input('id', mssql.VarChar, new_fee_id)
+            .input('student_id', mssql.VarChar, id)
+            .input('amount', mssql.Int, amount)
+            .execute('create_fee_payment');
+
+            return res.status(200).json({
+                message: 'Fee Payment made successfully'
+            });
+
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message
+        });
+    }
+}
+
 module.exports = {
     createStudent,
     getStudents,
     getStudentById,
     updateStudent,
-    softDeleteStudent
+    softDeleteStudent,
+    makeFeePayment
 }
